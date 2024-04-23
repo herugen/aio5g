@@ -2,7 +2,6 @@ ARG distro=ubuntu
 ARG tag=latest
 ARG repo=https://github.com/open5gs/open5gs.git
 ARG version=v2.7.1
-ARG arch=aarch64
 
 FROM ${distro}:${tag} as builder
 ARG repo
@@ -81,13 +80,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
         iputils-ping \
         netcat
 
-# copy common libraries that open5gs use
-ARG arch
-ENV LIBPATH=/usr/local/lib/${arch}-linux-gnu
+# copy libraries
+ENV LIBPATH=/usr/local/lib/*-linux-gnu
 COPY --from=builder ${LIBPATH} ${LIBPATH}
 RUN ldconfig
 
 # copy binaries & configuration files
-COPY --from=builder /open5gs/build/src/*/open5gs-*d /usr/local/bin/
-COPY --from=builder /open5gs/build/configs/open5gs/* /etc/open5gs/
-COPY --from=builder /open5gs/build/configs/freeDiameter/* /etc/open5gs/freeDiameter/
+COPY --from=builder /usr/local/bin/* /usr/local/bin/
+COPY --from=builder /usr/local/etc/* /usr/local/etc/
