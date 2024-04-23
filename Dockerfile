@@ -81,10 +81,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
         netcat
 
 # copy libraries
-ENV LIBPATH=/usr/local/lib/*-linux-gnu
-COPY --from=builder ${LIBPATH} ${LIBPATH}
+COPY --from=builder /usr/local/lib /usr/local/lib
 RUN ldconfig
 
 # copy binaries & configuration files
-COPY --from=builder /usr/local/bin/* /usr/local/bin/
-COPY --from=builder /usr/local/etc/* /usr/local/etc/
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /usr/local/etc /usr/local/etc
