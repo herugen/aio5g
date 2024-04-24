@@ -3,7 +3,7 @@ name: docker-publish-open5gs
 on: workflow_dispatch
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}-open5gs
   OPEN5GS_REPO: https://github.com/open5gs/open5gs.git
   OPEN5GS_VER: v2.7.1
 
