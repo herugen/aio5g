@@ -11,7 +11,9 @@ ARG TARGETPLATFORM # automatically passed by docker
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-    python \
+    git \
+    build-essential \
+    python-is-python3 \
     python3-pip \
     python-dev-is-python3 \
     libssl-dev \
@@ -24,13 +26,13 @@ WORKDIR /mongo
 RUN git checkout ${version}
 RUN python3 -m pip install -r etc/pip/compile-requirements.txt
 # this docker image is aim to build for generic cpu arch for raspberry or x86_64 without AVX
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then NOAVX_FLAG="-march=x86-64"; else CCFLAG="-march=armv8-a+crc -mtune=cortex-a72"; fi \
-    && python3 buildscripts/scons.py DESTDIR=/opt/mongo CCFLAGS="${NOAVX_FLAG} --disable-warnings-as-errors" install-mongod
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then NOAVX_FLAG="-march=x86-64"; else NOAVX_FLAG="-march=armv8-a+crc -mtune=cortex-a72"; fi \
+    && python3 buildscripts/scons.py DESTDIR=/opt/mongo CCFLAGS="${NOAVX_FLAG}" install-mongod --disable-warnings-as-errors --separate-debug=on
 
 # production image
 FROM ${distro}:${tag}
 
-COPY --from=builder /opt/mongo/mongod /usr/bin/
+COPY --from=builder /opt/mongo/bin/mongod /usr/bin/
 
 RUN mkdir /data/db
 EXPOSE 27017
