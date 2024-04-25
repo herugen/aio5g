@@ -1,0 +1,37 @@
+ARG distro=ubuntu
+ARG tag=latest
+ARG repo=https://github.com/mongodb/mongo.git
+ARG version=r6.0.0
+
+FROM ${distro}:${tag} as builder
+ARG repo
+ARG version
+ARG TARGETPLATFORM # automatically passed by docker
+
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+    python \
+    python3-pip \
+    python-dev-is-python3 \
+    libssl-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev
+
+# clone codes and build
+RUN git clone ${repo} /mongo
+WORKDIR /mongo
+RUN git checkout ${version}
+RUN python3 -m pip install -r etc/pip/compile-requirements.txt
+# this docker image is aim to build for generic cpu arch for raspberry or x86_64 without AVX
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then NOAVX_FLAG="-march=x86-64"; else CCFLAG="-march=armv8-a+crc -mtune=cortex-a72"; fi \
+    && python3 buildscripts/scons.py DESTDIR=/opt/mongo CCFLAGS="${NOAVX_FLAG} --disable-warnings-as-errors" install-mongod
+
+# production image
+FROM ${distro}:${tag}
+
+COPY --from=builder /opt/mongo/mongod /usr/bin/
+
+RUN mkdir /data/db
+EXPOSE 27017
+ENTRYPOINT ["/usr/bin/mongod"]
