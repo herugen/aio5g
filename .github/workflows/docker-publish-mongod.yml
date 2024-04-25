@@ -9,7 +9,8 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    #runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       packages: write
@@ -50,7 +51,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile.mongod
-          platforms: linux/arm64 #,linux/amd64
+          platforms: linux/arm64,linux/amd64
           build-args: |
             repo=${{ env.MONGOD_REPO }}
             version=${{ env.MONGOD_VER }}
