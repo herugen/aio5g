@@ -34,6 +34,6 @@ FROM ${distro}:${tag}
 
 COPY --from=builder /opt/mongo/bin/mongod /usr/bin/
 
-RUN mkdir /data/db
+RUN mkdir -p /data/db
 EXPOSE 27017
 ENTRYPOINT ["/usr/bin/mongod"]
