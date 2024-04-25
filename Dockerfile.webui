@@ -1,0 +1,27 @@
+ARG repo=https://github.com/open5gs/open5gs.git
+ARG version=v2.7.1
+
+FROM node:20
+ARG repo
+ARG version
+ENV HOSTNAME=0.0.0.0
+ENV NODE_ENV=production
+
+# refer to $repo docs/assets/webui/install and docker/webui/Dockerfile
+RUN git clone ${repo} /open5gs
+WORKDIR /open5gs
+RUN git checkout ${version}
+RUN mkdir -p /usr/src/open5gs
+RUN cp -a /open5gs/webui /usr/src/open5gs/webui
+WORKDIR /usr/src/open5gs/webui
+RUN npm clean-install && \
+    npm run build
+# clean useless codes
+RUN rm -rf /open5gs
+
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
+RUN chmod +x /wait
+
+CMD /wait && npm run start
+
+EXPOSE 9999
