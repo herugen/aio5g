@@ -8,9 +8,7 @@ ENV HOSTNAME=0.0.0.0
 ENV NODE_ENV=production
 
 # refer to $repo docs/assets/webui/install and docker/webui/Dockerfile
-RUN git clone ${repo} /open5gs
-WORKDIR /open5gs
-RUN git checkout ${version}
+RUN git clone --depth 1 --branch ${version} ${repo} /open5gs
 RUN mkdir -p /usr/src/open5gs
 RUN cp -a /open5gs/webui /usr/src/open5gs/webui
 WORKDIR /usr/src/open5gs/webui
