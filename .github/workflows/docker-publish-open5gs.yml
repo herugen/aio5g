@@ -52,6 +52,7 @@ jobs:
           file: ./Dockerfile.open5gs
           platforms: linux/amd64,linux/arm64
           build-args: |
+            tag=focal
             repo=${{ env.OPEN5GS_REPO }}
             version=${{ env.OPEN5GS_VER }}
           push: ${{ github.event_name != 'pull_request' }}
@@ -77,6 +78,7 @@ jobs:
           file: ./Dockerfile.webui
           platforms: linux/amd64,linux/arm64
           build-args: |
+            tag=focal
             repo=${{ env.OPEN5GS_REPO }}
             version=${{ env.OPEN5GS_VER }}
           push: ${{ github.event_name != 'pull_request' }}
