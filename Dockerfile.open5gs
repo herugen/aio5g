@@ -41,9 +41,8 @@ RUN apt-get update -y && \
     apt-get clean
 
 # clone codes and build
-RUN git clone ${repo} /open5gs
+RUN git clone --depth 1 --branch ${version} ${repo} /open5gs
 WORKDIR /open5gs
-RUN git checkout ${version}
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
