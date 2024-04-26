@@ -53,6 +53,7 @@ jobs:
           file: ./Dockerfile.mongod
           platforms: linux/arm64,linux/amd64
           build-args: |
+            tag=focal
             repo=${{ env.MONGOD_REPO }}
             version=${{ env.MONGOD_VER }}
           push: ${{ github.event_name != 'pull_request' }}
