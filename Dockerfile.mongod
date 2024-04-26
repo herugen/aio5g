@@ -22,9 +22,8 @@ RUN apt-get update -y && \
     libcurl4-openssl-dev
 
 # clone codes and build
-RUN git clone ${repo} /mongo
+RUN git clone --depth 1 --branch ${version} ${repo} /mongo
 WORKDIR /mongo
-RUN git checkout ${version}
 RUN python3 -m pip install -r etc/pip/compile-requirements.txt
 # this docker image is aim to build for generic cpu arch for raspberry or x86_64 without AVX
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then NOAVX_FLAG="-march=x86-64"; else NOAVX_FLAG="-march=armv8-a+crc -mtune=cortex-a72"; fi \
