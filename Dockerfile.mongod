@@ -32,6 +32,13 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then NOAVX_FLAG="-march=x86-64"; e
 # production image
 FROM ${distro}:${tag}
 
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+    libssl-dev \
+    liblzma-dev \
+    libcurl4-openssl-dev
+
 COPY --from=builder /opt/mongo/bin/mongod /usr/bin/
 
 RUN mkdir -p /data/db
