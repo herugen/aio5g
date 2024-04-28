@@ -1,0 +1,43 @@
+ARG distro=ubuntu
+ARG tag=latest
+ARG repo=https://github.com/aligungr/UERANSIM.git
+ARG version=v3.2.6
+
+FROM ${distro}:${tag} as builder
+ARG repo
+ARG version
+
+# install tools
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+        make \
+        gcc \
+        g++ \
+        libsctp-dev lksctp-tools \
+        iproute2 \
+        libssl-dev \
+        wget \
+        git
+
+# install new cmake
+RUN wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0.tar.gz && \
+    tar -zvxf cmake-3.20.0.tar.gz && \
+    cd cmake-3.20.0 && \
+    ./bootstrap && \
+    make -j8 && \
+    make install
+
+# clone & build ueransim
+RUN git clone --depth 1 --branch ${version} ${repo} /UERANSIM
+WORKDIR /UERANSIM
+RUN make
+
+FROM ${distro}:${tag}
+
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt-get install -y --no-install-recommends \
+        libsctp-dev lksctp-tools \
+        iproute2
+COPY --from=builder /UERANSIM/build/* /usr/bin/
