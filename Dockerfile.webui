@@ -1,6 +1,8 @@
 ARG repo=https://github.com/open5gs/open5gs.git
 ARG version=v2.7.1
 
+FROM mongo:6.0.1 as mongo
+
 FROM node:20
 ARG repo
 ARG version
@@ -14,12 +16,17 @@ RUN cp -a /open5gs/webui /usr/src/open5gs/webui
 WORKDIR /usr/src/open5gs/webui
 RUN npm clean-install && \
     npm run build
+
+# prepare mongo initialization
+COPY --from=mongo /usr/bin/mongosh /usr/bin/mongosh
+RUN cp /open5gs/docs/assets/webui/mongo-init.js ./
+
 # clean useless codes
 RUN rm -rf /open5gs
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
 RUN chmod +x /wait
 
-CMD npm run start
+CMD mongosh $DB_URI ./mongo-init.js && npm run start
 
 EXPOSE 9999
