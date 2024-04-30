@@ -4,6 +4,7 @@ on: workflow_dispatch
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DNSMASQ_VER: 2.90-r2
 
 jobs:
   build:
@@ -49,10 +50,12 @@ jobs:
           context: .
           file: ./Dockerfile.dnsmasq
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            version=${{ env.DNSMASQ_VER }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-dnsmasq:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-dnsmasq:2.90
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-dnsmasq:${{ env.DNSMASQ_VER }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
