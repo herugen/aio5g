@@ -3,4 +3,4 @@ ARG tag=edge
 ARG version=2.90-r2
 
 FROM ${distro}:${tag}
-RUN apk --no-cache add dnsmasq=${{2.90-r2}}
+RUN apk --no-cache add dnsmasq=${{version}}
