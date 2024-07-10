@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Check if the script has been executed by root user"
+WHOAMI=$(whoami)
+if [ "$WHOAMI" != "root" ]; then
+	echo "You're executing the script as $WHOAMI instead of root.. exiting"
+	exit 1
+fi
+
+docker-compose -f /etc/open5gs/docker-compose.yaml down 
+docker-compose -f /etc/open5gs/docker-compose.yaml rm -f

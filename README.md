@@ -14,3 +14,15 @@ This project offers a significant reduction in disk space usage for Open5GS depl
 ## A MongoDB for embedded device - Raspberry Pi and mini x86_64 machine
 
 This project have recompiled MongoDB to be compatible with specific CPU architectures, making it suitable for running on embedded devices such as Raspberry Pi and mini x86_86 computers. 
+
+
+## How to install
+
+```
+curl -fsSL https://raw.githubusercontent.com/herugen/aio5g/rak/install | sudo sudo -E bash -
+```
+
+## How to uninstall
+```
+curl -fsSL https://raw.githubusercontent.com/herugen/aio5g/rak/uninstall | sudo sudo -E bash -
+```

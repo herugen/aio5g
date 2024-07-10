@@ -1,0 +1,152 @@
+# Open5GS
+# Exposed port 9999 for Open5GS webui, 38412/sctp for AMF N2, 8805 for SMF N4, and UPF use host network
+# Others use internal network
+
+version: '3.7'
+
+x-standard-volumes: &volumes_anchor
+  - /etc/open5gs:/etc/open5gs
+  - /var/log/open5gs:/var/local/log/open5gs
+
+x-generic-service: &service
+  image: ghcr.io/herugen/aio5g-open5gs:v2.7.1
+  restart: always
+  volumes: *volumes_anchor
+  #logging:
+  #  driver: "none" # disable stderr/stdout cause it's duplicated with logging file
+
+x-cp-service: &cpservice
+  <<: *service
+  environment:
+    - DB_URI=mongodb://mongodb/open5gs
+    - WAIT_HOSTS=mongodb:27017
+  networks:
+    - ctrlpath
+  healthcheck:
+    test: ["CMD", "nc", "-zv", "localhost", "80"]
+    timeout: "4s"
+    retries: 3
+  depends_on:
+    - mongodb
+
+services:
+  # Reverse proxy eNodeB and gNodeB web UI https traffic
+  # Users can now access https://192.168.151.100:4443 for 4G Web UI
+  # and https://192.168.151.100:5443 for 5G Web UI
+  nginx:
+    image: nginx:alpine
+    restart: always
+    container_name: nginx
+    ports:
+      - "4443:4443"
+      - "5443:5443"
+    volumes:
+      - /etc/open5gs/aio5g.com.conf:/etc/nginx/conf.d/default.conf
+      - /etc/open5gs/nginx/certs:/etc/nginx/ssl
+  # dnsmasq is aim to provide DHCP server & DNS server feature to gNodeB&eNodeB on RAK All-in-One 5G
+  dnsmasq:
+    image: ghcr.io/herugen/aio5g-dnsmasq:2.90
+    container_name: dnsmasq
+    command: dnsmasq -k --conf-file=/etc/dnsmasq.conf
+    cap_add:
+      - 'NET_ADMIN'
+    volumes:
+      - '/etc/resolv.conf:/etc/resolv.conf'
+      - '/etc/open5gs/dnsmasq.conf:/etc/dnsmasq.conf'
+      - '/var/log/:/var/log/'
+    restart: on-failure
+    network_mode: host
+  # mongodb is used for Open5GS subscription data storage
+  mongodb:
+    image: ghcr.io/herugen/aio5g-mongod:r6.0.0
+    container_name: mongodb
+    command: --bind_ip_all
+    restart: always
+    volumes:
+      - mongodata:/data/db
+      - /etc/open5gs/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - ctrlpath
+    ports:
+      - 27017:27017
+  # Open5GS - webui
+  webui:
+    image: ghcr.io/herugen/aio5g-webui:v2.7.1
+    container_name: open5gs-webui
+    depends_on:
+      - mongodb
+    ports:
+      - "9999:9999"
+    environment:
+      - DB_URI=mongodb://mongodb/open5gs
+      - WAIT_HOSTS=mongodb:27017
+    networks:
+      - ctrlpath
+  # Open5GS - AMF
+  amf:
+    <<: *cpservice
+    container_name: open5gs-amf
+    ports:
+      - "38412:38412/sctp"
+    command: /usr/local/bin/open5gs-amfd -c /etc/open5gs/aio.yaml
+  # Open5GS - SMF
+  smf:
+    <<: *cpservice
+    container_name: open5gs-smf
+    ports:
+      - 8805:8805
+    command: /usr/local/bin/open5gs-smfd -c /etc/open5gs/aio.yaml
+  # Open5GS - NRF
+  nrf:
+    <<: *cpservice
+    container_name: open5gs-nrf
+    command: /usr/local/bin/open5gs-nrfd -c /etc/open5gs/aio.yaml
+  # Open5GS - AUSF
+  ausf:
+    <<: *cpservice
+    container_name: open5gs-ausf
+    command: /usr/local/bin/open5gs-ausfd -c /etc/open5gs/aio.yaml
+  # Open5GS - UDM
+  udm:
+    <<: *cpservice
+    container_name: open5gs-udm
+    command: /usr/local/bin/open5gs-udmd -c /etc/open5gs/aio.yaml
+  # Open5GS - UDR
+  udr:
+    <<: *cpservice
+    container_name: open5gs-udr
+    command: /usr/local/bin/open5gs-udrd -c /etc/open5gs/aio.yaml
+  # Open5GS - PCF
+  pcf:
+    <<: *cpservice
+    container_name: open5gs-pcf
+    command: /usr/local/bin/open5gs-pcfd -c /etc/open5gs/aio.yaml
+  # Open5GS - NSSF
+  nssf:
+    <<: *cpservice
+    container_name: open5gs-nssf
+    command: /usr/local/bin/open5gs-nssfd -c /etc/open5gs/aio.yaml
+  # Open5GS - BSF
+  bsf:
+    <<: *cpservice
+    container_name: open5gs-bsf
+    command: /usr/local/bin/open5gs-bsfd -c /etc/open5gs/aio.yaml
+  # Open5GS - UPF
+  upf:
+    <<: *service
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    container_name: open5gs-upf
+    command: /usr/local/bin/open5gs-upfd -c /etc/open5gs/aio.yaml
+
+networks:
+  ctrlpath:
+    name: open5gs-cp
+    driver: bridge
+
+volumes:
+  mongodata:

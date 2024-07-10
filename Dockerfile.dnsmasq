@@ -1,7 +1,2 @@
-ARG distro=alpine
-ARG tag=edge
-ARG version=2.90-r2
-
-FROM ${distro}:${tag}
-ARG version
-RUN apk --no-cache add dnsmasq=${version}
+FROM alpine:edge
+RUN apk --no-cache add dnsmasq=2.90-r2

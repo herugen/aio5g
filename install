@@ -1,0 +1,36 @@
+#!/bin/bash
+
+echo "Check if the script has been executed by root user"
+WHOAMI=$(whoami)
+if [ "$WHOAMI" != "root" ]; then
+	echo "You're executing the script as $WHOAMI instead of root.. exiting"
+	exit 1
+fi
+
+if [ -e /etc/resolv.conf ]; then
+    echo "Fix internet access issue for RAK All-in-One.5G"
+    if [ -L /etc/resolv.conf ]; then
+        unlink /etc/resolv.conf
+    else
+        mv /etc/resolv.conf /etc/resolv.conf.bk
+    fi
+    ln -sf /var/run/systemd/resolve/resolv.conf /etc/resolv.conf
+fi
+
+echo "Download configuration files from github"
+TMP="/tmp/`uuidgen`"
+mkdir -p $TMP
+git clone --depth 1 --branch rak https://github.com/herugen/aio5g.git $TMP
+mv $TMP/etc/open5gs /etc # now we have /etc/open5gs
+rm -rf $TMP
+
+echo "Generate Nginx certs"
+mkdir -p /etc/open5gs/nginx/certs && \
+cd /etc/open5gs/nginx/certs && \
+openssl req -x509 -newkey rsa:4096 -keyout ssl_certificate.key -out ssl_certificate.crt -days 1825 -nodes -subj "/CN=aio5g.com"
+
+echo "Pulling docker images"
+cd /etc/open5gs && docker-compose pull
+
+echo "Start services"
+cd /etc/open5gs && docker-compose up -d
