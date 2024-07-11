@@ -1,2 +1,2 @@
 FROM alpine:edge
-RUN apk --no-cache add dnsmasq=2.90-r2
+RUN apk --no-cache add dnsmasq=2.90-r3
