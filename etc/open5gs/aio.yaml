@@ -1,5 +1,3 @@
-root@telerasp:~/aio5g# cat /etc/open5gs/aio.yaml 
-
 logger:
   level: debug
 global:
