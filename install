@@ -21,7 +21,9 @@ echo "Download configuration files from github"
 TMP="/tmp/`uuidgen`"
 mkdir -p $TMP
 git clone --depth 1 --branch rak https://github.com/herugen/aio5g.git $TMP
-mv $TMP/etc/open5gs /etc # now we have /etc/open5gs
+rm -rf /etc/open5gs && mv $TMP/etc/open5gs /etc # now we have /etc/open5gs
+rm -rf /etc/systemd/network/99-open5gs.net* && mv $TMP/etc/network/99-open5gs.net* /etc/systemd/network/
+rm -rf /etc/netplan/50-cloud-init.yaml && mv $TMP/etc/netplan/aio.yaml /etc/netplan/50-cloud-init.yaml
 rm -rf $TMP
 
 echo "Generate Nginx certs"
@@ -31,6 +33,13 @@ openssl req -x509 -newkey rsa:4096 -keyout ssl_certificate.key -out ssl_certific
 
 echo "Pulling docker images"
 cd /etc/open5gs && docker-compose pull
+
+echo "Enable forwarding and MASQUERADE"
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv6.conf.all.forwarding=1
+iptables -t nat -A POSTROUTING -s 10.45.0.0/16 ! -o ogstun -j MASQUERADE
+ip6tables -t nat -A POSTROUTING -s 2001:db8:cafe::/48 ! -o ogstun -j MASQUERADE
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 echo "Start services"
 cd /etc/open5gs && docker-compose up -d

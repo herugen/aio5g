@@ -1,0 +1,21 @@
+network:
+    ethernets:
+        eth0:
+            dhcp4: false
+            optional: true
+        eth1:
+            dhcp4: false
+            optional: true
+        eth2:
+            dhcp4: false
+            optional: true
+        eth3:
+            dhcp4: false
+            optional: true
+    version: 2
+    bridges:
+        br-lan:
+            optional: true
+            addresses: [192.168.150.100/24]
+            interfaces: [eth0, eth1, eth2, eth3]
+            dhcp4: true

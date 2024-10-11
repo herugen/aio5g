@@ -9,3 +9,14 @@ fi
 
 docker-compose -f /etc/open5gs/docker-compose.yaml down 
 docker-compose -f /etc/open5gs/docker-compose.yaml rm -f
+
+# remove network devices
+rm -rf /etc/open5gs
+rm -rf /etc/systemd/network/99-open5gs.net*
+
+# resume network configuration
+TMP="/tmp/`uuidgen`"
+mkdir -p $TMP
+git clone --depth 1 --branch rak https://github.com/herugen/aio5g.git $TMP
+rm -rf /etc/netplan/50-cloud-init.yaml && mv $TMP/etc/netplan/bridge.yaml /etc/netplan/50-cloud-init.yaml
+rm -rf $TMP

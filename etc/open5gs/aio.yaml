@@ -76,7 +76,7 @@ smf:
       - dev: eth0
     client:
       upf:
-        - address: 192.168.12.104
+        - address: 10.0.2.1
   gtpc:
     server:
       - dev: eth0
@@ -108,10 +108,10 @@ smf:
 upf:
   pfcp:
     server:
-      - address: 192.168.12.104
+      - address: 10.0.2.1
   gtpu:
     server:
-      - address: 192.168.12.104
+      - address: 10.0.2.1
   session:
     - subnet: 10.45.0.0/16
       gateway: 10.45.0.1
